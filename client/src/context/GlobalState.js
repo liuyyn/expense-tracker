@@ -1,9 +1,12 @@
 // Context provides a way to pass data through the component tree without having to pass props down manually at every level.
 import React, { createContext, useReducer } from "react";
 import AppReducer from "./AppReducer";
+import axios from "axios";
 // Initial sate
 const initialState = {
   transactions: [],
+  error: null,
+  loading: true,
 };
 
 // Create context
@@ -16,18 +19,61 @@ export const GlobalProvider = ({ children }) => {
   const [state, dispatch] = useReducer(AppReducer, initialState);
 
   // Actions
-  function deleteTransaction(id) {
-    dispatch({
-      type: "DELETE_TRANSACTION",
-      payload: id,
-    });
+  async function getTransactions() {
+    axios
+      .get("/api/v1/transactions")
+      .then((res) =>
+        dispatch({
+          type: "GET_TRANSACTIONS",
+          payload: res.data.data,
+        })
+      )
+      .catch((e) =>
+        dispatch({
+          type: "TRANSACTION_ERROR",
+          payload: e.response.data.error,
+        })
+      );
   }
 
-  function addTransaction(transaction) {
-    dispatch({
-      type: "ADD_TRANSACTION",
-      payload: transaction,
-    });
+  async function deleteTransaction(id) {
+    axios
+      .delete(`/api/v1/transactions/${id}`)
+      .then((res) =>
+        dispatch({
+          type: "DELETE_TRANSACTION",
+          payload: id,
+        })
+      )
+      .catch((e) =>
+        dispatch({
+          type: "TRANSACTION_ERROR",
+          payload: e.response.data.error,
+        })
+      );
+  }
+
+  async function addTransaction(transaction) {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    axios
+      .post("/api/v1/transactions", transaction, config)
+      .then((res) =>
+        dispatch({
+          type: "ADD_TRANSACTION",
+          payload: res.data.data,
+        })
+      )
+      .catch((e) =>
+        dispatch({
+          type: "TRANSACTION_ERROR",
+          payload: e.response.data.error,
+        })
+      );
   }
 
   return (
@@ -35,8 +81,11 @@ export const GlobalProvider = ({ children }) => {
     <GlobalContext.Provider
       value={{
         transactions: state.transactions,
+        error: state.error,
+        loading: state.loading,
         deleteTransaction,
         addTransaction,
+        getTransactions,
       }}
     >
       {children}

@@ -8,7 +8,7 @@ import { AddTransaction } from "./components/AddTransaction";
 
 import { GlobalProvider } from "./context/GlobalState";
 
-function App() {
+const App = () => {
   return (
     <GlobalProvider>
       <Header />
@@ -20,6 +20,6 @@ function App() {
       </div>
     </GlobalProvider>
   );
-}
+};
 
 export default App;
